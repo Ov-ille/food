@@ -1,0 +1,39 @@
+{% extends 'core/base.html' %}
+
+{% load static %}
+
+{% block extrastyle %}
+
+
+<link rel="stylesheet" href="{% static 'food/css/food.css' %}">
+
+{% comment %} <script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+{{ form.media }}
+<script type="text/javascript" src={% static "food/js/main.js" %}></script> {% endcomment %}
+
+{% endblock extrastyle %}
+
+{% block content %}
+
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div{% if message.tags %} class="message-{{ message.tags }}"{% endif %}>{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<h1>Add New Recipe</h1>
+{% csrf_token %}
+<form action="" method="get">
+    {{ form }}
+    <div>Ingredients</div>
+    <table>
+        <tr><th>Name</th><th>Amount</th><th>Unit</th></tr>
+        <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
+    </table>
+    <div>+</div>
+    <input type="submit" value="Submit">
+</form>
+
+{% endblock %}
