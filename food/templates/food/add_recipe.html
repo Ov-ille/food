@@ -7,9 +7,9 @@
 
 <link rel="stylesheet" href="{% static 'food/css/food.css' %}">
 
-{% comment %} <script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
-{{ form.media }}
-<script type="text/javascript" src={% static "food/js/main.js" %}></script> {% endcomment %}
+<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+{{ ingredient_formset.media }}
+<script type="text/javascript" src={% static "food/js/food.js" %}></script>
 
 {% endblock extrastyle %}
 
@@ -24,15 +24,18 @@
 {% endif %}
 
 <h1>Add New Recipe</h1>
-{% csrf_token %}
-<form action="" method="get">
-    {{ form }}
+
+<form action="" method="post">
+    {% csrf_token %}
+    {{ recipe_form }}
     <div>Ingredients</div>
-    <table>
-        <tr><th>Name</th><th>Amount</th><th>Unit</th></tr>
-        <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
-    </table>
-    <div>+</div>
+    {{ ingredient_formset.management_form }}
+    {% for form in ingredient_formset %}
+        <div id="ingredient-form-{{forloop.counter0}}" class="ingredient-form">{{ form }}</div>
+    {% endfor %}
+    <div id="ingredient-form-empty" class="ingredient-form">{{ingredient_formset.empty_form }}</div>
+
+    <div><span id="add-ingredient-btn">+</span></div>
     <input type="submit" value="Submit">
 </form>
 

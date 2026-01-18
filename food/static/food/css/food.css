@@ -1,0 +1,13 @@
+#ingredient-form-empty {
+    display: none
+}
+
+#add-ingredient-btn:not(.btn-disabled):hover {
+    cursor: pointer;
+    color: green;
+}
+
+#add-ingredient-btn.btn-disabled {
+    color: grey;
+    cursor: default;
+}

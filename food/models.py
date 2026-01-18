@@ -23,7 +23,7 @@ class Food(models.Model):
 
 class Recipe(models.Model):
     name = models.CharField()
-    instructions = models.TextField()
+    instructions = models.TextField(blank=True)
 
     def __str__(self):
         return self.name
