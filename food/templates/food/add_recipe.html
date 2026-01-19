@@ -30,6 +30,7 @@
     {{ recipe_form }}
     <div>Ingredients</div>
     {{ ingredient_formset.management_form }}
+    {{ ingredient_formset.non_form_errors }}
     {% for form in ingredient_formset %}
         <div id="ingredient-form-{{forloop.counter0}}" class="ingredient-form">{{ form }}</div>
     {% endfor %}

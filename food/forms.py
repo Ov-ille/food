@@ -1,7 +1,7 @@
 from dal import autocomplete
 from django.forms import Form, CharField, IntegerField, ModelChoiceField, ModelForm, Textarea, ValidationError
 
-from food.models import Food, Recipe
+from food.models import Food, Ingredient, Recipe
 
 
 class AddRecipeForm(ModelForm):
@@ -13,13 +13,15 @@ class AddRecipeForm(ModelForm):
         model = Recipe
         fields = "__all__"
 
-class AddIngredientForm(Form):
-    name = ModelChoiceField(queryset=Food.objects.all(), 
+class AddIngredientForm(ModelForm):
+    food = ModelChoiceField(queryset=Food.objects.all(), 
                                     widget=autocomplete.ModelSelect2(url="food-autocomplete"),
                                     required=False)
-    amount = IntegerField(required=False)
+    # amount = IntegerField(required=False)
 
     class Meta:
+        model = Ingredient
+        fields = "__all__"
         widgets = {
-            'name': autocomplete.Select2(url='food-autocomplete')
+            'food': autocomplete.Select2(url='food-autocomplete')
         }    

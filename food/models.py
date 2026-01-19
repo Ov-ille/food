@@ -30,11 +30,11 @@ class Recipe(models.Model):
 
 
 class Ingredient(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.PROTECT)
-    ingredient = models.ForeignKey(Food, on_delete=models.PROTECT)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    food = models.ForeignKey(Food, on_delete=models.PROTECT)
     amount = models.IntegerField()
     comment = models.CharField(blank=True)
 
     def __str__(self):
-        return f"""{self.amount} {self.ingredient.unit.plural_str() if self.amount > 1 else self.ingredient.unit} 
-            {self.ingredient.name} ({self.recipe})"""
+        return f"""{self.amount} {self.food.unit.plural_str() if self.amount > 1 else self.food.unit} 
+            {self.food.name} ({self.recipe})"""
