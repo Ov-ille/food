@@ -1,0 +1,34 @@
+{% extends 'core/base.html' %}
+
+{% load static %}
+
+{% block extrastyle %}
+
+
+<link rel="stylesheet" href="{% static 'food/css/add_change_recipe.css' %}">
+
+<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+{{ ingredient_formset.media }}
+<script type="text/javascript" src={% static "food/js/add_change_recipe.js" %}></script>
+
+{% endblock extrastyle %}
+
+{% block content %}
+
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div{% if message.tags %} class="message-{{ message.tags }}"{% endif %}>{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<h1>Recipes</h1>
+<ul>
+    {% for recipe in recipes %}
+    <li><a href="/food/recipe/{{recipe.pk}}/change">{{ recipe }}</a></li>
+    {% endfor %}
+</ul>
+
+
+{% endblock %}

@@ -8,6 +8,11 @@ from food.models import Food, Ingredient, Recipe
 
 
 # Create your views here.
+def recipe_list(request):
+    return HttpResponse(render(request,
+                               "food/recipe_list.html",
+                               context={"recipes": Recipe.objects.all()}))
+
 def add_recipe(request):
     recipe_form = AddRecipeForm(prefix="recipe")
     AddIngredientFormset = inlineformset_factory(Recipe, Ingredient, AddIngredientForm, extra=1, max_num=2, can_delete=True, validate_max=True)

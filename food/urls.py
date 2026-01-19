@@ -8,5 +8,5 @@ urlpatterns = [
         views.FoodAutocomplete.as_view(),
         name='food-autocomplete',
     ),
-    path("add_recipe", views.add_recipe, name="add_recipe"),
+    path("recipe/", views.recipe_list, name="recipe_list"),
 ]
