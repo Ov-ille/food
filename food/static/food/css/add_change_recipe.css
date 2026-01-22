@@ -11,3 +11,22 @@
     color: grey;
     cursor: default;
 }
+
+.submit-line-btn {
+    background-color: rgb(227, 227, 227);
+    border: 1px solid black;
+    border-radius: 10%;
+    padding: 3px;
+    font-size: small;
+    text-decoration: none;
+    color: black;
+    cursor: pointer;
+}
+
+.submit-line-btn:hover {
+    background-color: rgb(214, 214, 214);;
+}
+
+#edit-icon {
+    text-decoration: none;
+}
