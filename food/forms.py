@@ -4,20 +4,20 @@ from django.forms import Form, CharField, IntegerField, ModelChoiceField, ModelF
 from food.models import Food, Ingredient, Recipe
 
 
-class AddRecipeForm(ModelForm):
+class RecipeForm(ModelForm):
 
     class Meta:
         model = Recipe
         fields = "__all__"
 
-class AddIngredientForm(ModelForm):
+class IngredientForm(ModelForm):
     food = ModelChoiceField(queryset=Food.objects.all(), 
                                     widget=autocomplete.ModelSelect2(url="food-autocomplete"),
-                                    required=False)
+                                    required=True)
 
     class Meta:
         model = Ingredient
         fields = "__all__"
         widgets = {
             'food': autocomplete.Select2(url='food-autocomplete')
-        }    
+        }

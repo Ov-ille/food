@@ -23,11 +23,13 @@
 </div>
 {% endif %}
 <a href=" {% url "recipe_list" %} ">Show all recipes</a>
-<h1>Add New Recipe</h1>
+<h1>{% if add %}Add{% else %}Change{% endif %} Recipe {% if not add and not editable %}<span><a href="?e=1" id="edit-icon">&#9998;</a></span>{% endif %}</h1>
 
 <form action="" method="post">
     {% csrf_token %}
+    
     {{ recipe_form }}
+
     <div>Ingredients</div>
     {{ ingredient_formset.management_form }}
     {{ ingredient_formset.non_form_errors }}
@@ -36,8 +38,12 @@
     {% endfor %}
     <div id="ingredient-form-empty" class="ingredient-form">{{ingredient_formset.empty_form }}</div>
 
+    {% if editable %}
     <div><span id="add-ingredient-btn">+</span></div>
-    <input type="submit" value="Submit">
+    <input type="submit" value="Save" class="submit-line-btn" >
+    <a role="button" class="submit-line-btn" href="{% url "change_recipe" recipe_id=recipe_form.instance.id %}">Cancel</a>
+    {% endif %}
+
 </form>
 
 {% endblock %}
