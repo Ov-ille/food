@@ -5,3 +5,7 @@ body {
 #edit-icon:hover {
     cursor: pointer;
 }
+
+.display-none {
+    display: none;
+}

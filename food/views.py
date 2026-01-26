@@ -1,11 +1,11 @@
 from dal import autocomplete
 from django.forms import BaseModelFormSet, formset_factory, inlineformset_factory, modelformset_factory
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 
-from food.forms import IngredientForm, RecipeForm
-from food.models import Food, Ingredient, Recipe
+from food.forms import FoodForm, IngredientForm, RecipeForm
+from food.models import Food, Ingredient, Recipe, Unit
 
 
 # Create your views here.
@@ -104,16 +104,29 @@ def add_change_recipe(request, recipe_id=None):
             ingredient_formset.save()
             return HttpResponseRedirect(reverse("change_recipe", kwargs={"recipe_id": new_recipe.id}))
 
-    context = {"recipe_form":recipe_form, 
-               "ingredient_formset": ingredient_formset, 
-               "add": add, 
-               "editable": editable
-               }
+    context = {
+        "recipe_form": recipe_form, 
+        "ingredient_formset": ingredient_formset, 
+        "food_form": FoodForm(),
+        "add": add, 
+        "editable": editable
+    }
 
     return HttpResponse(render(request,
                                "food/add_change_recipe.html",
                                context=context))
 
+def add_food(request):
+    if request.POST:
+        food_form = FoodForm(
+            data=request.POST, 
+        )
+        food_form_validated = food_form.is_valid()
+        if food_form_validated:
+            food = Food.objects.create(name=food_form.instance.name, unit=food_form.instance.unit)
+            return JsonResponse({"id": food.pk, "text": food.name})
+        else:
+            return JsonResponse({"errors": food_form.errors})
 
 class FoodAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):

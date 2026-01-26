@@ -46,4 +46,17 @@
 
 </form>
 
+<div id="food-form-div" class="display-none">
+    <form  id="food-form" action="">
+        {% csrf_token %}
+        <ul id="add-food-form-error" class="errorlist display-none"></ul>
+        {% for field in food_form %}
+            <ul id="add-food-{{field.name}}-error" class="errorlist display-none"></ul>
+            <div>{{field.as_field_group}}</div>
+        {% endfor %}
+        <input id="save-new-food-btn" data-to-id="" type="button" value="Save" class="submit-line-btn" >
+    </form>
+</div>
+
+
 {% endblock %}

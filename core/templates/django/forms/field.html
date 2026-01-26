@@ -6,5 +6,5 @@
 {% endif %}
 {% if field.help_text %}<div class="helptext"{% if field.auto_id %} id="{{ field.auto_id }}_helptext"{% endif %}>{{ field.help_text|safe }}</div>{% endif %}
 {{ field.errors }}
-{% if field.field.is_readonly %} <div>{{ field.field.content|linebreaksbr }}</div> {% else %} {{ field }}{% endif %}
+{% if field.field.is_readonly %} <div>{{ field.field.content|linebreaksbr }}</div> {% else %} {{ field }} {% if field.field.can_add %} <div class="add-new-btn" data-to-id={{field.auto_id}}>NEW</div> {% endif %} {% endif %}
 {% if field.use_fieldset %}</fieldset>{% endif %}
