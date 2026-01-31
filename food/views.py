@@ -17,7 +17,7 @@ from food.forms import FoodForm, IngredientForm, RecipeForm, UnitForm
 from food.models import Food, Ingredient, Recipe, Unit
 
 
-class AddChangeView(View):
+class StandardModelView(View):
 
     model = None 
     form_class = None
@@ -100,6 +100,36 @@ class AddChangeView(View):
                     }
         ))
 
+    def get_form(self, object, editable, data=None):
+        return self.form_class(
+            prefix=self.model._meta.model_name, 
+            instance=object,
+            data=data,
+            editable=editable
+        )
+    
+    def get_inline_formsets(self, object, editable, has_delete_permission, data=None):
+        inline_formsets = []
+        for inline in self.inlines:
+            InlineFormset = inlineformset_factory(
+                self.model, 
+                inline.model, 
+                inline.form_class, 
+                extra=0,    
+                can_delete=editable and has_delete_permission, 
+                validate_max=True
+                )
+            inline_formset = InlineFormset(
+                prefix=inline.model._meta.model_name, 
+                instance=object, 
+                data=data,
+                queryset=inline.model.objects.none() if not object and not data else None,
+                form_kwargs={"editable": editable}
+                )
+            inline_formset.opts = inline.model._meta
+            inline_formsets.append(inline_formset)
+        return inline_formsets
+
     def add_change_view(self, request, object_id=None):
         add = object_id is None
 
@@ -128,47 +158,14 @@ class AddChangeView(View):
         else:
             object = self.get_object(object_id)
 
-        form_prefix = self.model._meta.model_name
         if request.method == "GET":
             if popup:
                 editable = True
-            form = self.form_class(prefix=form_prefix, instance=object)
-            inline_formsets = []
-            for inline in self.inlines:
-                InlineFormset = inlineformset_factory(
-                    self.model, 
-                    inline.model, 
-                    inline.form_class, 
-                    extra=0,    
-                    can_delete=editable and has_delete_permission, 
-                    validate_max=True
-                    )
-                inline_formset = InlineFormset(
-                    prefix=inline.model._meta.model_name, 
-                    instance=object, 
-                    queryset=inline.model.objects.none() if not object else None
-                    )
-                inline_formset.opts = inline.model._meta
-                inline_formsets.append(inline_formset)
-            if not editable:
-                for field_name, field in form.fields.items():
-                    field.is_readonly = True
-                    field_value = getattr(form.instance, field_name)
-                    field.content = field_value
-                for inline_formset in inline_formsets:
-                    for inline_form in inline_formset:
-                        for field_name, field in inline_form.fields.items():
-                            if inline_form.instance.id and field_name in [f.name for f in inline_form.instance._meta.get_fields()]:
-                                field.is_readonly = True
-                                field_value = getattr(inline_form.instance, field_name)
-                                field.content = field_value
+            form = self.get_form(object, editable)
+            inline_formsets = self.get_inline_formsets(object, editable, has_delete_permission)
 
         elif request.method == "POST":
-            form = self.form_class(
-                prefix=form_prefix, 
-                data=request.POST, 
-                instance=object if not add else None
-                )
+            form = self.get_form(object, editable, data=request.POST)
             form_validated = form.is_valid()
 
             if form_validated:
@@ -176,23 +173,7 @@ class AddChangeView(View):
             else:
                 new_object = form.instance
 
-            inline_formsets = []
-            for inline in self.inlines:
-                InlineFormset = inlineformset_factory(
-                    self.model, 
-                    inline.model, 
-                    inline.form_class, 
-                    extra=0,    
-                    can_delete=editable and has_delete_permission, 
-                    validate_max=True
-                    )
-                inline_formset = InlineFormset(
-                    prefix=inline.model._meta.model_name, 
-                    data=request.POST,
-                    instance=object, 
-                    )
-                inline_formset.opts = inline.model._meta
-                inline_formsets.append(inline_formset)
+            inline_formsets = self.get_inline_formsets(object, editable, has_delete_permission, request.POST)
             inline_formsets_validated = all([x.is_valid() for x in inline_formsets])
 
             if inline_formsets_validated and form_validated:
@@ -201,7 +182,7 @@ class AddChangeView(View):
                     inline_formset.instance = new_object
                     inline_formset.save()
                 if popup and add:
-                    popup_response_data = json.dumps({"add_change": "add" if add else "change", "id": obj.pk, "text": obj.name})
+                    popup_response_data = json.dumps({"add_change": "add" if add else "change", "id": obj.pk, "text": str(obj)})
                     return TemplateResponse(
                         request,
                         "food/popup_response.html",
@@ -232,22 +213,22 @@ class AddChangeView(View):
                                 context=context))
 
 
-class IngredientView(AddChangeView):
+class IngredientView(StandardModelView):
     model = Ingredient
     form_class = IngredientForm
     url_roles = ["add"]
 
-class FoodView(AddChangeView):
+class FoodView(StandardModelView):
     model = Food
     form_class = FoodForm
     url_roles = ["add"]
 
-class UnitView(AddChangeView):
+class UnitView(StandardModelView):
     model = Unit
     form_class = UnitForm
     url_roles = ["add"]
 
-class RecipeView(AddChangeView):
+class RecipeView(StandardModelView):
     model = Recipe
     form_class = RecipeForm
     inlines = [IngredientView]
