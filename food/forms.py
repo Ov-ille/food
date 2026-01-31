@@ -10,7 +10,7 @@ class EditableModelForm(ModelForm):
     def __init__(self, editable=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if not editable:
+        if not editable and self.instance.pk:
             for field_name, field in self.fields.items():
                 field.is_readonly = True
                 field_value = getattr(self.instance, field_name)
