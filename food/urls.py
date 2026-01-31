@@ -2,14 +2,15 @@ from django.urls import path
 
 from . import views
 
+app_name = "food"
 urlpatterns = [
     path(
         'food_autocomplete/',
         views.FoodAutocomplete.as_view(),
         name='food-autocomplete',
     ),
-    path("recipe/add", views.add_change_recipe, name="add_recipe"),
-    path("recipe/<path:recipe_id>/change", views.add_change_recipe, name="change_recipe"),
-    path("recipe/", views.recipe_list, name="recipe_list"),
-    path("food/add", views.add_food, name="add_food")
+    *views.RecipeView.get_urls(),
+    *views.IngredientView.get_urls(),
+    *views.FoodView.get_urls(),
+    *views.UnitView.get_urls(),
 ]

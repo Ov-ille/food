@@ -1,0 +1,55 @@
+{% extends 'core/base.html' %}
+
+{% load static %}
+
+{% block extrastyle %}
+<link rel="stylesheet" href="{% static 'food/css/add_change.css' %}">
+{% endblock extrastyle %}
+
+{% block extrahead %}
+{{media}}
+<script type="text/javascript" src={% static "food/js/add_change.js" %}></script>
+{% endblock extrahead %}
+
+{% block content %}
+
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div{% if message.tags %} class="message-{{ message.tags }}"{% endif %}>{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+{% if not popup %}
+<a href=" {% url list_url %} ">{{ title_list }}</a>
+{% endif %}
+<h1>{{ title }} {% if not add and not editable %}<span><a href="?e=1" id="edit-icon">&#9998;</a></span>{% endif %}</h1>
+
+<form action="" method="post">
+    {% csrf_token %}
+    
+    {{ form }}
+
+    {% for inline_formset in inline_formsets %}
+        <h2>{{ inline_formset.opts.verbose_name_plural|capfirst}}</h2>
+        {{ inline_formset.management_form }}
+        {{ inline_formset.non_form_errors }}
+        {% for form in inline_formset %}
+            <div id="ingredient-form-{{forloop.counter0}}" class="ingredient-form">{{ form }}</div>
+        {% endfor %}
+        <div id="ingredient-form-empty" class="ingredient-form">{{inline_formset.empty_form }}</div>
+
+        {% if editable %}
+        <div><span id="add-ingredient-btn">+</span></div>
+        {% endif %}
+    {% endfor %}
+    {% if editable %}
+        <input type="submit" value="Save" class="submit-line-btn" >
+        {% if not popup %}
+                <a role="button" class="submit-line-btn" href={% if form.instance.id %}"{% url change_url object_id=form.instance.id %}"{% else %}"{% url list_url %}"{% endif %}>Cancel</a>
+        {% endif %}
+    {% endif %}
+
+</form>
+
+{% endblock %}
