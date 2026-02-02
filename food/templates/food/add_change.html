@@ -3,6 +3,7 @@
 {% load static %}
 
 {% block extrastyle %}
+<link rel="stylesheet" href="{% static 'food/css/main.css' %}">
 <link rel="stylesheet" href="{% static 'food/css/add_change.css' %}">
 {% endblock extrastyle %}
 
@@ -23,7 +24,12 @@
 {% if not popup %}
 <a href=" {% url list_url %} ">{{ title_list }}</a>
 {% endif %}
-<h1>{{ title }} {% if not add and not editable %}<span><a href="?e=1" id="edit-icon">&#9998;</a></span>{% endif %}</h1>
+<h1>{{ title }} 
+    {% if has_change_permission and not add %}
+        {% if not edit_mode %}<span><a href="?e=1" id="edit-icon">&#9998;</a></span>{% endif %}
+        {% if has_delete_permission %}<span><a href="{% url delete_url object_id=form.instance.id %}" id="edit-icon">&#x274c;</a></span>{% endif %}
+    {% endif %}
+</h1>
 
 <form action="" method="post">
     {% csrf_token %}
@@ -39,11 +45,12 @@
         {% endfor %}
         <div id="ingredient-form-empty" class="ingredient-form">{{inline_formset.empty_form }}</div>
 
-        {% if editable %}
+        {% if edit_mode %}
         <div><span id="add-ingredient-btn">+</span></div>
         {% endif %}
     {% endfor %}
-    {% if editable %}
+
+    {% if edit_mode %}
         <input type="submit" value="Save" class="submit-line-btn" >
         {% if not popup %}
                 <a role="button" class="submit-line-btn" href={% if form.instance.id %}"{% url change_url object_id=form.instance.id %}"{% else %}"{% url list_url %}"{% endif %}>Cancel</a>

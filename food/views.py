@@ -3,6 +3,8 @@ from dal import autocomplete
 from django import forms
 from django.apps import apps
 from django.conf import settings
+from django.contrib import messages
+from django.contrib.admin.options import csrf_protect_m
 from django.forms import BaseModelFormSet, formset_factory, inlineformset_factory, modelformset_factory
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
@@ -49,6 +51,8 @@ class StandardModelView(View):
             return f"{cls.base_url}/<path:object_id>/change/"
         elif role == "list":
             return f"{cls.base_url}/"
+        elif role == "delete":
+            return f"{cls.base_url}/<path:object_id>/delete/"
         # todo: other
     
     @classonlymethod
@@ -63,14 +67,18 @@ class StandardModelView(View):
         role = resolve(request.path).url_name.split("_", maxsplit=1)[-1]
         if role in ["add", "change"]:
             return self.add_change_view(request, object_id)
-        elif role in ["list"]:
+        elif role == "list":
             return self.list_view(request)
+        elif role == "delete":
+            return self.delete_view(request, object_id)
 
     
     def post(self, request, object_id=None):
         role = resolve(request.path).url_name.split("_", maxsplit=1)[-1]
         if role in ["add", "change"]:
             return self.add_change_view(request, object_id)
+        elif role == "delete":
+            return self.delete_view(request, object_id)
 
     def get_object(self, object_id):
         try:
@@ -87,6 +95,7 @@ class StandardModelView(View):
         ]
         return forms.Media(js=["admin/js/%s" % url for url in js])
     
+    @csrf_protect_m
     def list_view(self, request):
         return HttpResponse(
             render(
@@ -130,15 +139,44 @@ class StandardModelView(View):
             inline_formsets.append(inline_formset)
         return inline_formsets
 
+    @csrf_protect_m
+    def delete_view(self, request, object_id):
+        object = self.get_object(object_id)
+        object.opts = object._meta
+
+        # todo: permission!
+        has_delete_permission = True
+
+        if not has_delete_permission:
+            messages.warning(request, f"You don't have permission to delete this!")
+            return HttpResponseRedirect(reverse(f"food:{self.build_url_name("change")}", kwargs={"object_id": object.pk} ))
+
+        if request.method == "GET":
+            return HttpResponse(
+                render(
+                    request,
+                    "food/delete.html",
+                    context={
+                        "object": object,
+                        "delete_url": f"food:{self.build_url_name("delete")}",
+                        "change_url": f"food:{self.build_url_name("change")}",
+                        }
+            ))
+        elif request.method == "POST":
+            object.delete()
+            messages.info(request, f"{object._meta.verbose_name} {str(object)} sucessfully deleted!")
+            return HttpResponseRedirect(reverse(f"food:{self.build_url_name("list")}"))
+ 
+    @csrf_protect_m
     def add_change_view(self, request, object_id=None):
         add = object_id is None
 
         # edit: currently in edit mode
         # editable: can edit
         # has_change_permission: can edit
-        editable = False
+        edit_mode = False
         if request.GET.get("e", 0) == "1" or add:
-            editable = True
+            edit_mode = True
 
         # popup
         popup = False
@@ -149,9 +187,13 @@ class StandardModelView(View):
         has_change_permission = True
         has_delete_permission = True
         has_add_permission = True
+        has_view_permission = True
+
+        if not has_view_permission:
+            ...
 
         if not has_change_permission:
-            editable = False
+            edit_mode = False
 
         if add:
             object = None
@@ -160,12 +202,12 @@ class StandardModelView(View):
 
         if request.method == "GET":
             if popup:
-                editable = True
-            form = self.get_form(object, editable)
-            inline_formsets = self.get_inline_formsets(object, editable, has_delete_permission)
+                edit_mode = True
+            form = self.get_form(object, edit_mode)
+            inline_formsets = self.get_inline_formsets(object, edit_mode, has_delete_permission)
 
         elif request.method == "POST":
-            form = self.get_form(object, editable, data=request.POST)
+            form = self.get_form(object, edit_mode, data=request.POST)
             form_validated = form.is_valid()
 
             if form_validated:
@@ -173,7 +215,7 @@ class StandardModelView(View):
             else:
                 new_object = form.instance
 
-            inline_formsets = self.get_inline_formsets(object, editable, has_delete_permission, request.POST)
+            inline_formsets = self.get_inline_formsets(object, edit_mode, has_delete_permission, request.POST)
             inline_formsets_validated = all([x.is_valid() for x in inline_formsets])
 
             if inline_formsets_validated and form_validated:
@@ -198,11 +240,14 @@ class StandardModelView(View):
             "form": form, 
             "inline_formsets": inline_formsets, 
             "add": add, 
-            "editable": editable,
+            "edit_mode": edit_mode,
+            "has_change_permission": has_change_permission,
+            "has_delete_permission": has_delete_permission,
             "title_list": f"Show all {self.model._meta.verbose_name_plural}",
             "title": f"{'Add' if add else 'Change'} {self.model._meta.verbose_name}",
             "list_url": f"food:{self.build_url_name("list")}",
             "change_url": f"food:{self.build_url_name("change")}",
+            "delete_url": f"food:{self.build_url_name("delete")}",
             "model_opts": self.opts,
             "media": media,
             "popup": popup
@@ -232,7 +277,7 @@ class RecipeView(StandardModelView):
     model = Recipe
     form_class = RecipeForm
     inlines = [IngredientView]
-    url_roles = ["add", "change", "list"]
+    url_roles = ["add", "change", "list", "delete"]
 
 
 
