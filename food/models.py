@@ -35,6 +35,7 @@ class Food(models.Model):
 class Recipe(models.Model):
     name = models.CharField()
     instructions = models.TextField(blank=True)
+    portions = models.IntegerField(default=1)
 
     class Meta:
         constraints = [
@@ -59,3 +60,6 @@ class Ingredient(models.Model):
     def __str__(self):
         return f"""{self.amount} {self.food.unit.plural_str() if self.amount > 1 else self.food.unit} 
             {self.food.name} ({self.recipe})"""
+
+    def amount_per_portion(self):
+        return self.amount / self.recipe.portions

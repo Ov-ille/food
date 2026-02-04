@@ -12,6 +12,13 @@
     cursor: default;
 }
 
-#edit-icon {
+#edit-icon, #view-icon {
     text-decoration: none;
+}
+
+.update-portions-icon {
+    margin: 0 5px;
+}
+.update-portions-icon:hover {
+    cursor: pointer;
 }

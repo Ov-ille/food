@@ -1,5 +1,8 @@
 window.addEventListener("load", ()=> {
 
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+
     let newFoodBtns = document.querySelectorAll(".add-new-btn");
     Array.from(newFoodBtns).forEach((btn) => {
         btn.addEventListener("click", (e) => {
@@ -38,9 +41,44 @@ window.addEventListener("load", ()=> {
     function createNewPopup(btn) {
         window.open(btn.dataset.addUrl, btn.dataset.toId, 'height=500,width=800,resizable=yes,scrollbars=yes');
     }
+
+    // change portions
+    let decreasePortionsBtn = document.querySelector(".update-portions-icon#decrease-portions");
+    let portions = document.querySelector("#id_recipe-portions");
+    if (decreasePortionsBtn && (parseInt(portions.innerHTML) == 1)) {
+        decreasePortionsBtn.classList.add("display-disabled")
+    }
+    let updatePortionsBtns = document.querySelectorAll(".update-portions-icon:not(.display-disabled)");
+    Array.from(updatePortionsBtns).forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            updatePortions(e.target);
+        })
+    })
+
+    async function updatePortions(button) {
+        
+        let url = window.location.href;
+        let urlParts = url.split("?");
+        let urlPost = urlParts[0] + "updateportions";
+        let response = await fetch(urlPost, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                "button": button.id
+            })
+        })
+        let data = await response.json()
+        if (data["status"] = "success") {
+            window.location.reload();
+            }
+    }
     
 })
 
+// append and select new option that was created via popup
 {
     function getDataFromPopup(window, add_change, id, text) {
         if (add_change == "add") {

@@ -23,6 +23,12 @@ class RecipeForm(EditableModelForm):
         model = Recipe
         fields = "__all__"
 
+    template_name = "food/recipe_form.html"
+    general_context = {}
+
+    def get_context(self):
+        return {**super().get_context(), **self.general_context}
+
 
 class IngredientForm(FormWithAddFields, EditableModelForm):
     food = ModelChoiceField(queryset=Food.objects.all(), 

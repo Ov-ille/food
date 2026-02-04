@@ -9,3 +9,10 @@ body {
 .display-none {
     display: none;
 }
+
+.display-disabled {
+    color: grey
+}
+.display-disabled:hover {
+    cursor: not-allowed !important
+}

@@ -1,0 +1,16 @@
+{{ errors }}
+{% if errors and not fields %}
+  <div>{% for field in hidden_fields %}{{ field }}{% endfor %}</div>
+{% endif %}
+{% for field, errors in fields %}
+  <div{% with classes=field.css_classes %}{% if classes %} class="{{ classes }}"{% endif %}{% endwith %}>
+    {{ field.as_field_group }}
+    {% if field.name == "portions" and field.field.is_readonly and has_change_permission %}<span class="update-portions-icon" id="increase-portions">&#8657;</span><span class="update-portions-icon" id="decrease-portions">&#8659;</span>{% endif %}
+    {% if forloop.last %}
+    {% for field in hidden_fields %}{{ field }}{% endfor %}
+    {% endif %}
+</div>
+{% endfor %}
+{% if not fields and not errors %}
+  {% for field in hidden_fields %}{{ field }}{% endfor %}
+{% endif %}

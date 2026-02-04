@@ -5,6 +5,7 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.options import csrf_protect_m
+from django.db import transaction
 from django.forms import BaseModelFormSet, formset_factory, inlineformset_factory, modelformset_factory
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
@@ -236,15 +237,11 @@ class StandardModelView(View):
         for inline_formset in inline_formsets:
             media += inline_formset.media
 
-        context = {
-            "form": form, 
-            "inline_formsets": inline_formsets, 
+        form_context = { 
             "add": add, 
             "edit_mode": edit_mode,
             "has_change_permission": has_change_permission,
             "has_delete_permission": has_delete_permission,
-            "title_list": f"Show all {self.model._meta.verbose_name_plural}",
-            "title": f"{'Add' if add else 'Change'} {self.model._meta.verbose_name}",
             "list_url": f"food:{self.build_url_name("list")}",
             "change_url": f"food:{self.build_url_name("change")}",
             "delete_url": f"food:{self.build_url_name("delete")}",
@@ -252,7 +249,15 @@ class StandardModelView(View):
             "media": media,
             "popup": popup
         }
-
+        general_context = { 
+            "form": form, 
+            "inline_formsets": inline_formsets,
+            "title_list": f"Show all {self.model._meta.verbose_name_plural}",
+            "title": f"{'Add' if add else 'Change'} {self.model._meta.verbose_name}",
+        }
+        form.general_context = form_context
+        context = {**form_context, **general_context}
+        
         return HttpResponse(render(request,
                                 "food/add_change.html",
                                 context=context))
@@ -279,6 +284,48 @@ class RecipeView(StandardModelView):
     inlines = [IngredientView]
     url_roles = ["add", "change", "list", "delete"]
 
+    @classmethod
+    def get_urls(cls):
+        urls = super().get_urls()
+        urls.append(
+            path(
+                f"{cls.base_url}/<path:object_id>/change/updateportions",
+                cls.as_view(),
+                name=f"{cls.base_url}_updateportions"
+            )
+        )
+        return urls
+    
+    def post(self, request, object_id=None):
+        role = resolve(request.path).url_name.split("_", maxsplit=1)[-1]
+        if role == "updateportions":
+            return self.update_portions(request, object_id)
+        else:
+            return super().post(request, object_id)
+
+    def update_portions(self, request, object_id):
+        try:
+            button_id = json.loads(request.body).get("button")
+            if button_id == "increase-portions":
+                change_portion = 1
+            elif button_id == "decrease-portions":
+                change_portion = -1
+            else:
+                raise ValueError("Not clear what to do!")
+            with transaction.atomic():
+                recipe = self.get_object(object_id)
+                new_portions = recipe.portions + change_portion
+                if new_portions > 0:
+                    with transaction.atomic():
+                        for ingredient in recipe.ingredient_set.all():
+                            ingredient.amount = ingredient.amount_per_portion() * new_portions
+                            ingredient.save()
+                        recipe.portions = new_portions
+                        recipe.save()
+                return JsonResponse({"status": "success"})
+        except:
+            # todo: exceptions
+            return JsonResponse({"status": "failed"})
 
 
 class FoodAutocomplete(autocomplete.Select2QuerySetView):

@@ -25,9 +25,14 @@
 <a href=" {% url list_url %} ">{{ title_list }}</a>
 {% endif %}
 <h1>{{ title }} 
+    <span><a href="" id="basket-icon">&#128722;</a></span>
     {% if has_change_permission and not add %}
-        {% if not edit_mode %}<span><a href="?e=1" id="edit-icon">&#9998;</a></span>{% endif %}
-        {% if has_delete_permission %}<span><a href="{% url delete_url object_id=form.instance.id %}" id="edit-icon">&#x274c;</a></span>{% endif %}
+        {% if not edit_mode %}
+            <span><a href="{% url change_url object_id=form.instance.id %}?e=1" id="edit-icon">&#9998;</a></span>
+        {% else %}
+            <span><a href="{% url change_url object_id=form.instance.id %}?e=0" id="view-icon">&#128065;</a></span>
+        {% endif %}
+        {% if has_delete_permission %}<span><a href="{% url delete_url object_id=form.instance.id %}" id="edit-icon"> &#128465; </a></span>{% endif %}
     {% endif %}
 </h1>
 
